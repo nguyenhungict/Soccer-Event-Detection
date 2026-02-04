@@ -35,16 +35,15 @@ The core objective was to address the challenge of extreme class imbalance in sp
 ## Methodology
 
 ### 1. Data Preparation
-- **Dataset**: SoccerNet-Echoes (Audio transcripts aligned with event labels).
+- **Dataset**: SoccerNet-Echoes (Audio commentary transcripts aligned with 500+ match event labels).
 - **Preprocessing**: 
-  - Sliding window approach (window size: 3 sentences) to capture context.
-  - Transcript-to-event alignment using fuzzy matching of match metadata.
+  - Implementation of a **Sliding Window** approach (3-sentence context) to provide sufficient linguistic cues for the transformer.
+  - Automated transcript-to-event alignment using **Fuzzy String Matching** to reconcile metadata discrepancies between SoccerNet and Echoes datasets.
 
 ### 2. Model Optimization
-- **Baseline**: Initial Cross-Entropy training yielded poor recall for rare events (F1 < 0.3).
-- **Improvements**:
-  - Integrated **Focal Loss** ($\gamma=2.0, \alpha=0.25$) to penalize misclassification of rare events.
-  - Implemented class-specific decision thresholds during inference (e.g., Substitution threshold > 0.95 to reduce false positives).
+- **Strategic Undersampling**: Balanced the training distribution by sampling only 15% of the "No-Event" background segments, significantly reducing gradient bias toward empty classes.
+- **Cost-Sensitive Learning**: Computed and integrated inverse frequency **Class Weights** into the Cross-Entropy loss function, penalizing the model more heavily for misclassifying rare events like Goals or Red Cards.
+- **Post-hoc Threshold Tuning**: Optimized per-class decision thresholds during the inference phase to maximize Precision-Recall balance for critical highlight events.
 
 ### 3. Results
 Evaluated on unseen English Premier League match transcripts:
