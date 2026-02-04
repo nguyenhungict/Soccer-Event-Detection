@@ -1,0 +1,15 @@
+# Large data and models
+dataset/
+models/
+
+# Python environment
+venv/
+.env
+__pycache__/
+*.pyc
+
+# Logs and temporary files
+*.log
+test_output.txt
+highlights_full.json
+train_log_final.txt
