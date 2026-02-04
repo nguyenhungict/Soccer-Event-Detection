@@ -6,11 +6,11 @@ This project implements an automated system for detecting key events in soccer m
 The core objective was to address the challenge of extreme class imbalance in sports event detection, where 'No-Event' samples vastly outnumber rare events of interest.
 
 ## Key Features
-- **Temporal Alignment**: Developed a custom aligner to map 1Hz commentary window segments to ground-truth timestamps, accounting for variable reaction lags (1-6 seconds).
-- **Imbalanced Learning Strategy**: 
-  - Implemented **Focal Loss** to down-weight easy negatives and focus training on hard-to-classify rare events.
-  - Applied aggressive **Data Augmentation** (Oversampling rare classes by 10x) and **Undersampling** of the majority class (keeping only 10% of background noise).
-- **Transformer Architecture**: Fine-tuned **XLM-RoBERTa-base** for sequence classification, chosen for its robustness in handling multilingual entities (player names, locations).
+- **Temporal Alignment**: Synchronized commentary transcripts with ground-truth SoccerNet labels using a reaction lag window (1 to 6 seconds) to account for the natural delay in live commentary.
+- **Class Imbalance Management**:
+  - Applied **Strategic Undersampling** to the "No-Event" majority class, retaining only 15% of background segments to intensify the training signal for significant events.
+  - Utilized **Weighted Cross-Entropy Loss** to assign higher penalties to misclassifications of rare events (Goal, Red Card, Penalty), ensuring the model prioritizes minority classes.
+- **Transformer Architecture**: Leveraged **XLM-RoBERTa-base** fine-tuned for sequence classification, taking advantage of its multilingual pre-training to handle diverse player names and football-specific terminology.
 ## Installation & Setup
 1. **Clone the repository**:
    ```bash
@@ -47,15 +47,15 @@ The core objective was to address the challenge of extreme class imbalance in sp
   - Implemented class-specific decision thresholds during inference (e.g., Substitution threshold > 0.95 to reduce false positives).
 
 ### 3. Results
-Evaluated on unseen English Premier League matches:
+Evaluated on unseen English Premier League match transcripts:
 
-| Metric | Baseline | Optimized |
+| Metric | Baseline (Raw) | Optimized (Threshold Tuning) |
 | :--- | :--- | :--- |
-| **F1 Score** | 0.29 | **0.86** |
-| Precision | 0.19 | 0.67 |
-| Recall | 0.60 | >0.90 |
+| **F1 Macro** | 0.32 | **0.48** |
+| Precision | 0.15 | 0.60 |
+| Recall | 0.55 | 0.40 |
 
-*Note: The optimized model successfully filters out background commentary noise, achieving high precision in Goal detection.*
+*Note: The model demonstrates high reliability in Goal Detection post-threshold optimization, effectively filtering out noise from background commentary.*
 
 ## Usage
 
