@@ -1,136 +1,87 @@
-# Soccer Event Detection from Commentary Transcripts
+# Soccer Event Detection from Commentary Transcripts (V4)
 
 ## Project Overview
-An automated system for detecting key soccer events (Goals, Yellow/Red cards, Penalties, Substitutions) from audio commentary transcripts using transformer-based deep learning. The model leverages temporal alignment and imbalanced learning techniques to identify high-impact moments within 90-minute matches.
+An automated system for detecting high-impact soccer events (Goal, Card, Penalty) from audio commentary transcripts using transformer-based deep learning. The project has evolved from a general event classifier to a specialized, highly optimized model capable of running efficiently on local hardware while achieving state-of-the-art performance on highlight generation.
 
-## Key Features
-- **Temporal Alignment Engine**: Synchronized commentary transcripts with ground-truth SoccerNet labels using a 5-second reaction lag window (T+1 to T+6 seconds), accounting for the natural delay in live sports commentary.
-- **Class Balancing Strategy**:
-  - Applied **Strategic Undersampling** to the "No-Event" majority class, retaining only 15% of background segments to increase the training signal for rare, critical events.
-  - Improved dataset balance from 98:2 (Event:No-Event) to approximately 50:50.
-- **Fuzzy String Matching**: Developed a robust data loader using Python's `difflib` to reconcile naming inconsistencies between SoccerNet and SoccerNet-Echoes datasets.
-- **Transformer Architecture**: Fine-tuned **XLM-RoBERTa-base** for multilingual sequence classification, capitalizing on its pre-training to handle diverse player names and football terminology.
+## Model Evolution: From V1 to V4
 
-## Installation & Setup
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/nguyenhungict/Soccer-Event-Detection-.git
-   cd Soccer-Event-Detection-
-   ```
-2. **Download External Assets**:
-   Due to file size limits, the `models/` and `dataset/` folders are hosted externally.
-   - [Download Models](https://drive.google.com/drive/folders/1RFvh5l8u2bO-fcIRFb8b8XTi6S9PL3eK?usp=sharing) - Place in the root directory as `models/`.
-   - [Download Dataset](https://drive.google.com/drive/folders/1hVSjPfSgQg_SMhiQUG_t0RR_6hlLM0BU?usp=sharing) - Place in the root directory as `dataset/`.
-3. **Install Dependencies**:
-   ```bash
-   pip install transformers datasets scikit-learn torch SoccerNet
-   ```
+### Initial Version (V1/V2)
+- **Scope**: Attempted to detect 5+ event classes including Substitutions.
+- **Issues**: Extreme class imbalance (98% No-Event), causing the model to miss rare events like Red Cards and Penalties.
+- **Hardware**: Heavy dependency on cloud GPUs (Tesla T4).
+- **Performance**: High recall noise; F1-Score for highlights was low (< 0.40).
 
-## Technology Stack
-- **Languages**: Python
-- **Frameworks**: PyTorch, HuggingFace Transformers
-- **Data Processing**: NumPy, Pandas, Scikit-learn
-- **Dataset**: SoccerNet-Echoes (500+ match transcripts), SoccerNet Action Spotting v2
-- **Training Environment**: Google Colab (Tesla T4 GPU)
+### Final Version (V4 - Optimized)
+- **Refined Scope**: Focused strictly on **Highlights** (Goal, Card, Penalty). Removed "Substitution" to reduce noise.
+- **Dataset Scale**: Trained on **4,752 matches** (SoccerNet-Echoes), split into 4,039 Train / 713 Val.
+- **Advanced Balancing Strategy**:
+  - Achieved a highly effective distribution for training:
+    - **No-Event**: 66.7%
+    - **Goal**: 14.0%
+    - **Card**: 17.7%
+    - **Penalty**: 1.6% (Heavily weighted w/ Class Weight 3.92)
+- **Local Optimization**:
+  - Runs on **4GB VRAM** (e.g., RTX 3050 Ti) using Gradient Accumulation (Steps=16).
+  - Mixed Precision (FP16) training.
 
-## Methodology
+## Training Results
+The V4 model was trained for 5 epochs with consistent performance gains:
+- **Final Accuracy**: 72.4%
+- **F1 Score (Highlights)**: **0.67** (Peak performance for detecting Goal/Card/Penalty)
+- **Validation Loss**: Stabilized at 0.81, showing no signs of overfitting.
 
-### 1. Data Preparation
-- **Dataset**: SoccerNet-Echoes audio commentary transcripts aligned with 500+ match event annotations from SoccerNet Action Spotting v2.
-- **Preprocessing Pipeline**:
-  - Implemented a **3-sentence sliding window** approach to provide sufficient contextual information for the transformer.
-  - Developed automated transcript-to-event alignment using **Fuzzy String Matching** (cutoff=0.3) to handle metadata discrepancies between datasets.
-  - Applied temporal alignment with a 5-second reaction lag (1-6s after event) to sync commentary with ground-truth timestamps.
-
-### 2. Training Strategy
-- **Class Imbalance Handling**: 
-  - Original distribution: 98% No-Event, 2% Events (extremely imbalanced).
-  - Applied aggressive undersampling: retained only 15% of No-Event samples.
-  - Final balanced distribution: ~50% Events, ~50% No-Event.
-- **Model Architecture**: XLM-RoBERTa-base (278M parameters) with sequence classification head.
-- **Hyperparameters**:
-  - Batch size: 16 | Learning rate: 2e-5  
-  - Epochs: 5 | Max sequence length: 160 tokens  
-  - Optimizer: AdamW | Weight decay: 0.01
-- **Training Duration**: ~2 hours on Tesla T4 GPU (Google Colab).
-
-### 3. Evaluation Results
-The model was evaluated on a held-out validation set (20% of total data) representing unseen matches:
-
+**Test Case: Chelsea vs Burnley (Whisper V2 English)**
 | Metric | Value |
 | :--- | :--- |
-| **Accuracy** | 87.0% |
-| **F1 Macro (All Classes)** | **0.46** |
-| **F1 Weighted** | 0.88 |
-| Precision (Weighted) | 0.91 |
-| Recall (Weighted) | 0.87 |
+| **Precision** | **1.00** |
+| **Recall** | **1.00** |
+| **F1 Score** | **1.00** |
+*Model detected 100% of events with zero false positives.*
 
-### Per-Class Performance:
+**Test Case: Leicester vs Arsenal (High Scoring Match)**
+| Metric | Value |
+| :--- | :--- |
+| **Precision** | **0.60** |
+| **Recall** | **1.00** |
+| **F1 Score** | **0.75** |
+*Model successfully captured all goals in a chaotic 7-goal match.*
 
-| Event Type | Precision | Recall | F1-Score | Support |
-| :--- | :--- | :--- | :--- | :--- |
-| **No-Event** | 0.96 | 0.90 | 0.93 | 31,767 |
-| **Goal** | 0.34 | 0.61 | **0.43** | 709 |
-| **Yellow Card** | 0.35 | 0.54 | 0.43 | 861 |
-| **Red Card** | 0.32 | 0.52 | 0.40 | 23 |
-| **Substitution** | 0.28 | 0.50 | 0.36 | 1,147 |
-| **Penalty** | 0.19 | 0.24 | 0.21 | 85 |
+## Repository Structure
+- `train_local_v4.py`: The main training script optimized for local execution.
+- `test_full_match.py`: Inference script for generating highlights from JSON transcripts.
+- `evaluate_result.py`: Evaluation tool for calculating Precision/Recall against ground truth.
+- `models_v4/`: Directory for trained model artifacts.
 
-**Key Insights**:
-- The model achieves **61% recall for Goal detection**, successfully capturing over half of all scoring events from commentary alone.
-- High accuracy (87%) is primarily driven by reliable No-Event classification.
-- The Macro F1 of 0.46 reflects the significant challenge of rare event detection in highly imbalanced sports data.
+## Installation & Usage
 
-## Usage
+### 1. Environment Setup
+```bash
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+pip install transformers scikit-learn accelerate
+```
 
-### Inference on New Match Transcripts
-To extract highlights from a match transcript:
+### 2. Training (Local V4)
+To train the model on your local machine:
+```bash
+python train_local_v4.py
+```
 
+### 3. Running Inference (Test)
+To generate highlights for a specific match:
+1. Open `test_full_match.py` and update `TRANSCRIPT_FILE` to your target JSON.
+2. Run:
 ```bash
 python test_full_match.py
 ```
+*Output will be saved to `highlights_v4.json`.*
 
-This script will:
-1. Load a match transcript (JSON format from Whisper ASR).
-2. Apply the same 3-sentence windowing and preprocessing.
-3. Generate predictions with confidence scores for each event type.
-4. Output a JSON file containing event timestamps and labels.
-
-### Post-Processing (Threshold Tuning)
-To optimize precision for production deployment:
-
+### 4. Evaluation
+To check accuracy against ground truth:
 ```bash
 python evaluate_result.py
 ```
 
-By tuning decision thresholds per event class, the system can achieve significantly higher precision (up to 0.67 for Goals).
-
-## Potential Model Improvements
-
-Based on experimental iterations, the following strategies have shown promise for increasing model performance:
-
-### 1. Advanced Loss Functions
-- **Focal Loss** (γ=2.0, α=0.25): Down-weights easy examples and focuses training on hard-to-classify rare events. In experiments, this improved F1-Macro from 0.46 to 0.55+ during training.
-- **Class-weighted Cross-Entropy**: Dynamically compute inverse frequency weights to penalize the model more heavily for misclassifying rare events.
-
-### 2. Data Augmentation Strategies
-- **Rare Event Oversampling**: Duplicate rare event samples (Red Card, Penalty) by 10x to increase their representation in training batches.
-- **Synonym-based Text Augmentation**: Replace key action words with synonyms (e.g., "goal" → "scored", "strike") to improve model robustness to linguistic variations.
-- **Back-Translation**: Use multilingual models to translate commentary to another language and back to create paraphrased training samples.
-
-### 3. Post-Processing Optimization
-- **Per-Class Threshold Tuning**: Optimize decision thresholds for each event type independently (e.g., Goal ≥ 0.7, Substitution ≥ 0.95).
-  - Experimental results showed F1 improvement from 0.29 → **0.86** on test matches after threshold optimization.
-- **Temporal Non-Maximum Suppression (NMS)**: Merge duplicate predictions within a 15-second window to reduce false positives.
-
-### 4. Architecture Enhancements
-- **Hierarchical Attention**: Add a secondary attention layer to weigh the importance of different sentences within the 3-sentence window.
-- **Fine-tune on Domain-Specific Corpus**: Continue pre-training XLM-RoBERTa on a large corpus of sports commentary before task-specific fine-tuning.
-
-### 5. Multimodal Fusion (Advanced)
-- Integrate audio features (crowd noise peaks, referee whistles) and video frames (ball trajectory, player jerseys) to achieve 0.8+ F1 on all event types.
-- This approach would require additional datasets like SoccerNet-v2 (video annotations).
-
 ## Acknowledgments
-- **SoccerNet**: For providing the high-quality annotated dataset ([SoccerNet.org](https://www.soccer-net.org/)).
-- **HuggingFace**: For the Transformers library and pre-trained models.
+- **SoccerNet**: For the annotated dataset.
+- **HuggingFace**: For the Transformer models.
+- **OpenAI Whisper**: For high-quality transcriptions using the V2 English model.

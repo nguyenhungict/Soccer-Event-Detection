@@ -1,6 +1,8 @@
 # Large data and models
 dataset/
 models/
+models_v4/
+models_v2/
 
 # Python environment
 venv/

@@ -1,0 +1,38 @@
+{
+  "metadata": {
+    "transcript_file": "E:\\USTH_ICT\\B3\\NLP\\dataset\\sn-echoes\\Dataset\\whisper_v2_en\\england_epl\\2015-2016\\2015-09-26 - 17-00 Leicester 2 - 5 Arsenal\\1_asr.json",
+    "label_file": null
+  },
+  "highlights": [
+    {
+      "time": 745.0,
+      "label": "Goal",
+      "score": 0.9956890940666199,
+      "text": "He scores for the fourth consecutive match, Jamie Vardy, superstar Oh my god, what a beautiful counter, with a ball that was in Lester\u2019s penalty area This ball, we thought it was going to go out in a corner, not at all"
+    },
+    {
+      "time": 1049.0,
+      "label": "Goal",
+      "score": 0.996260404586792,
+      "text": "1-0 for Leicester, two posts already And perhaps the equalizer from Walcott, well served once again, Walcott, post in train A story of posts in this match, that smiles on Theo Walcott who equalizes"
+    },
+    {
+      "time": 1775.0,
+      "label": "Goal",
+      "score": 0.9818987846374512,
+      "text": "This is the third Hexagon His third alone Incredible West Ham team"
+    },
+    {
+      "time": 1978.0,
+      "label": "Goal",
+      "score": 0.9959070682525635,
+      "text": "Here it is, the Chilean\u2019s first goal this season He unlocks and allows Arsenal to lead Hagues have been carried out in this part"
+    },
+    {
+      "time": 2627.0,
+      "label": "Goal",
+      "score": 0.9127290844917297,
+      "text": "Alexis Sanchez, there is help again But it\u2019s coming back, Sanchez, it\u2019s been whistled Is that a hand from Sanchez when he gets the ball the second time?"
+    }
+  ]
+}
